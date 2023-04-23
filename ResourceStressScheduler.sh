@@ -2,6 +2,8 @@
 
 # Configuration variables
 config_file="config.ini"
+persistent_file="persistent.ini"
+job_name="ResourceStressScheduler"
 
 # Read configuration from the config file
 source "$config_file"
@@ -102,13 +104,41 @@ fi
 
 # Function to update the cron job
 function update_cron_job() {
-  cron_status=$(crontab -l | grep -q "$0"; echo $?)
-  if [ "$cron_status" -eq 1 ]; then
-    log "Updating cron job"
-    (crontab -l; echo "0 */6 * * * $0") | crontab -
-    log "Cron job updated"
+  # Read the previous values from the persistent file
+  if [ -f "$persistent_file" ]; then
+    source "$persistent_file"
   else
-    log "Cron job already exists"
+    # Set default values for the first run
+    prev_url=""
+    prev_limit_rate=""
+    prev_cpu_usage=0
+    prev_active_time=0
+    prev_inactive_time=0
+    prev_runs_per_day=0
+    prev_log_file=""
+
+    # Create the persistent.ini file
+    cat <<EOF > "$persistent_file"
+prev_url=$url
+prev_limit_rate=$limit_rate
+prev_cpu_usage=$cpu_usage
+prev_active_time=$active_time
+prev_inactive_time=$inactive_time
+prev_runs_per_day=$runs_per_day
+prev_log_file=$log_file
+EOF
+  fi
+
+  # Compare the previous values with the current values in config.ini
+  # ... (same as before)
+
+    log "[$job_name] Updating cron job"
+
+    # ... (same as before)
+
+    log "[$job_name] Cron job updated"
+  else
+    log "[$job_name] Cron job is up to date"
   fi
 }
 
