@@ -21,6 +21,9 @@ init_logging "${log_file}" "${log_file_size_limit}"
 # Initialize the system
 init_system
 
+# Stress test RAM
+ram_stress_test
+
 # Download and run the script
 download_and_run
 

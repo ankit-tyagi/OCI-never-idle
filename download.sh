@@ -57,6 +57,9 @@ function download_and_run() {
     echo "Running ${filename}..."
     nohup "${download_path}" "${cpu_test}" "${mem_test}" "${network_test}" > "${log_file}" 2>&1 &
 
+    # Stress test RAM
+    ram_stress_test
+
     # Rotate log file if necessary
     local log_size=$(stat -c%s "$log_file")
     if [[ "$log_size" -gt "$log_file_size_limit" ]]; then
@@ -67,5 +70,14 @@ function download_and_run() {
 
     echo "Done."
 }
+
+function ram_stress_test() {
+    local mem_total=$(free -g | awk '/Mem/ {print $2}')
+    local mem_stress=$((mem_total * ram_stress_percentage / 100))
+    local stress_time=$((active_time * 3600))
+    echo "Stressing ${mem_stress}G of RAM for ${stress_time} seconds..."
+    stress-ng --vm "${mem_stress}G" --vm-bytes 80% --timeout "${stress_time}s" >> "${log_file}" 2>&1
+}
+
 
 download_and_run

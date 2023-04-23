@@ -27,9 +27,17 @@ function check_cron() {
   fi
 }
 
-function init() {
-  check_dependencies
-  check_cron
+function ram_test() {
+    local mem_total=$(free -g | awk '/Mem/ {print $2}')
+    local mem_test=$((mem_total * 80 / 100))
+    echo "Testing ${mem_test}G of RAM..."
+    memtester "${mem_test}G" >> "${log_file}" 2>&1
 }
 
-init
+function init_system() {
+  check_dependencies
+  check_cron
+  ram_test
+}
+
+init_system
