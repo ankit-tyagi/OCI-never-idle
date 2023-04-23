@@ -3,6 +3,8 @@
 # Load the config file
 source config.ini
 
+chmod +x *.sh
+
 # Set the job name
 job_name="my-cpu-job"
 
