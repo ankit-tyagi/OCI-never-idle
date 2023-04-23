@@ -1,3 +1,5 @@
+# Work In Progress
+
 ## Stress Testing Script
 
 This repository contains a shell script that downloads a file from a specified URL at a specified rate limit and runs a script that consumes a specified percentage of CPU, memory, and network for a specified amount of time. It also schedules the script to run a specified number of times per day during specific time intervals and logs all the minute actions in a file in a specified location, with automatic file rotation. The script allows for the configuration of all relevant parameters in a single configuration file and the creation and updating of a persistent file to track changes in configuration parameters. It also supports RAM testing and multiple distributions when installing software.
