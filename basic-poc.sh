@@ -6,18 +6,19 @@
 CPU_PERCENT=25
 NET_PERCENT=15
 LOG_FILE="basic-poc.log"
-INTERFACE="ans3" # Replace with your network interface, e.g.,eth0, wlan0, enp0s3, ens3, etc.
+INTERFACE="eth0" # Replace with your network interface, e.g., wlan0, enp0s3, etc.
+DURATION=3600 # Duration in seconds (1 hour)
 
 # Function to check if a command exists
 command_exists () {
     type "$1" &> /dev/null ;
 }
 
-# Check if cpulimit and tc are installed
-if command_exists cpulimit && command_exists tc; then
-    echo "cpulimit and tc are installed, continuing with the script." | tee -a "$LOG_FILE"
+# Check if cpulimit, tc, and ethtool are installed
+if command_exists cpulimit && command_exists tc && command_exists ethtool; then
+    echo "cpulimit, tc, and ethtool are installed, continuing with the script." | tee -a "$LOG_FILE"
 else
-    echo "Error: cpulimit and/or tc not found. Please install them before running this script." | tee -a "$LOG_FILE"
+    echo "Error: cpulimit, tc, and/or ethtool not found. Please install them before running this script." | tee -a "$LOG_FILE"
     exit 1
 fi
 
@@ -27,7 +28,7 @@ CPULIMIT_PID=$!
 echo "CPU usage for this shell limited to $CPU_PERCENT% (cpulimit PID: $CPULIMIT_PID)" | tee -a "$LOG_FILE"
 
 # Limit network bandwidth usage
-MAX_BW=$(cat /sys/class/net/$INTERFACE/speed) # Get maximum bandwidth in Mbps
+MAX_BW=$(ethtool $INTERFACE | grep -i "speed" | awk '{print $2}') # Get maximum bandwidth in Mbps
 LIMIT_BW=$(echo "$MAX_BW * $NET_PERCENT / 100" | bc) # Calculate limit in Mbps
 
 # Set up traffic control
@@ -37,8 +38,8 @@ tc class add dev $INTERFACE parent 1:1 classid 1:10 htb rate ${LIMIT_BW}Mbit cei
 
 echo "Network bandwidth limited to $LIMIT_BW Mbps on interface $INTERFACE" | tee -a "$LOG_FILE"
 
-# Wait for user to press enter to revert the changes and exit
-read -p "Press enter to revert the changes and exit the script..."
+# Sleep for the duration
+sleep $DURATION
 
 # Revert changes
 kill $CPULIMIT_PID &>> "$LOG_FILE"

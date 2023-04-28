@@ -10,7 +10,8 @@ ifconfig -a
 ip link show
 ip addr show eth0
 
-
+sudo apt-get update
+sudo apt-get install ethtool
 
 
 chmod +x basic-poc.sh
