@@ -6,7 +6,7 @@
 CPU_PERCENT=25
 NET_PERCENT=15
 LOG_FILE="basic-poc.log"
-INTERFACE="eth0" # Replace with your network interface, e.g., wlan0, enp0s3, etc.
+INTERFACE="ans3" # Replace with your network interface, e.g.,eth0, wlan0, enp0s3, ens3, etc.
 
 # Function to check if a command exists
 command_exists () {

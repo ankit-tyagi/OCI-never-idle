@@ -3,6 +3,16 @@
 # POC
 Execut below things
 ```
+sudo apt-get update
+sudo apt-get install cpulimit tc
+sudo apt-get install iproute2
+ifconfig -a
+ip link show
+ip addr show eth0
+
+
+
+
 chmod +x basic-poc.sh
 ./basic-poc.sh
 ```
