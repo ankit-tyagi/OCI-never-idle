@@ -41,3 +41,5 @@ function init_system() {
 }
 
 init_system
+check_cron
+ram_test

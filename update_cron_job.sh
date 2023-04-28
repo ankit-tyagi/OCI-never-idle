@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Load the config file
-source /path/to/config.ini
+source config.ini
+source logging.sh
 
 # Function to update the cron job
 function update_cron_job() {

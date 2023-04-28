@@ -17,6 +17,7 @@ source scheduling.sh
 
 # Initialize the logging
 init_logging "${log_file}" "${log_file_size_limit}"
+check_log_file_size "${log_file}" "${log_file_size_limit}"
 
 # Initialize the system
 init_system
