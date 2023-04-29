@@ -8,12 +8,12 @@ fi
 
 # Variables
 CPU_PERCENT=25
-INTERFACE="enp0s3" # Replace with your network interface, e.g., wlan0, enp0s3, eth0, etc.
+INTERFACE=enp0s3
 NETWORK_SPEED=200kbps
 LOG_FILE="basic-poc.log"
 CRON_FILE="basic-poc-cron.txt"
-RUNS_PER_DAY=6
-RUN_DURATION_SECONDS=3600
+RUNS_PER_DAY=200
+RUN_DURATION_SECONDS=300
 
 # Calculate the cpulimit value
 CPU_CORES=$(nproc)
