@@ -31,7 +31,7 @@ if [ "$(id -u)" -ne 0 ]; then
 else
     CRON_SCHEDULE="*/$((24 * 60 / RUNS_PER_DAY)) * * * *"
     CRON_COMMAND="bash $(realpath $0) --run"
-    (crontab -l | grep -v "$CRON_IDENTIFIER" ; echo "$CRON_SCHEDULE $CRON_COMMAND $CRON_IDENTIFIER") | crontab -
+    (crontab -l 2>/dev/null | grep -v "$CRON_IDENTIFIER" ; echo "$CRON_SCHEDULE $CRON_COMMAND $CRON_IDENTIFIER") | crontab -
     echo "Cron job updated to run $RUNS_PER_DAY times a day for $DURATION seconds each." | tee -a "$LOG_FILE"
 fi
 
@@ -59,4 +59,5 @@ if [ "$#" -eq 1 ] && [ "$1" == "--run" ]; then
     kill $CPULIMIT_PID &>> "$LOG_FILE"
     tc qdisc del dev $INTERFACE root &>> "$LOG_FILE"
 
-    echo "CPU and network
+    echo "CPU and network limitations removed." | tee -a "$LOG_FILE"
+fi
