@@ -1,26 +1,26 @@
 #!/bin/bash
 
-# Check if cpulimit and tc are installed
-if ! command -v cpulimit &> /dev/null || ! command -v tc &> /dev/null; then
-    echo "Error: cpulimit and/or tc not found. Please install them before running this script."
+# Check if cpulimit, tc, and stress-ng are installed
+if ! command -v cpulimit &> /dev/null || ! command -v tc &> /dev/null || ! command -v stress-ng &> /dev/null; then
+    echo "Error: cpulimit, tc, and/or stress-ng not found. Please install them before running this script."
     exit 1
 fi
 
 # Variables
 CPU_PERCENT=25
 INTERFACE="enp0s3" # Replace with your network interface, e.g., wlan0, enp0s3, eth0, etc.
-upNETWORK_SPEED=200kbps
+NETWORK_SPEED=200kbps
 LOG_FILE="basic-poc.log"
 CRON_FILE="basic-poc-cron.txt"
-RUNS_PER_DAY=8
+RUNS_PER_DAY=6
 RUN_DURATION_SECONDS=3600
 
 # Calculate the cpulimit value
 CPU_CORES=$(nproc)
 CPULIMIT_VALUE=$(awk "BEGIN {printf \"%.0f\", ${CPU_PERCENT}*${CPU_CORES}}")
 
-# Set up CPU limiting
-cpulimit -e "cpulimit" -l ${CPULIMIT_VALUE} &
+# Set up CPU limiting with stress-ng
+stress-ng --cpu ${CPU_CORES} --timeout ${RUN_DURATION_SECONDS}s &
 
 # Set up network limiting
 tc qdisc add dev ${INTERFACE} root handle 1: htb default 10
@@ -47,7 +47,7 @@ echo "Cron job updated to run ${RUNS_PER_DAY} times a day for ${RUN_DURATION_SEC
 
 # Run for the specified duration and then stop limiting CPU and network
 sleep ${RUN_DURATION_SECONDS}
-killall cpulimit
+killall stress-ng
 tc qdisc del dev ${INTERFACE} root
 
 echo "[$(date)] Status: Stopped" >> ${LOG_FILE}
