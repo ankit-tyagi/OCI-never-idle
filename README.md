@@ -13,8 +13,8 @@ ip addr show eth0
 sudo apt-get update
 sudo apt-get install ethtool
 
-
-chmod +x basic-poc.sh
+chmod 777 basic-poc.sh
+chmod 777 cron-setup.sh
 sudo ./basic-poc.sh
 ```
 
