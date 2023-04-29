@@ -7,10 +7,10 @@ CRON_FILE="basic-poc-cron.txt"
 
 # Set up cron job
 CRON_INTERVAL_MINUTES=$(( 1440 / RUNS_PER_DAY ))
-echo "*/${CRON_INTERVAL_MINUTES} * * * * /bin/bash $(pwd)/basic-poc.sh" > ${CRON_FILE}
+echo "*/${CRON_INTERVAL_MINUTES} * * * * /bin/bash /home/ubuntu/repo/OCI-never-idle/basic-poc.sh" > ${CRON_FILE}
 crontab -l > temp_crontab
-if ! grep -Fxq "*/${CRON_INTERVAL_MINUTES} * * * * /bin/bash $(pwd)/basic-poc.sh" temp_crontab; then
-    echo "*/${CRON_INTERVAL_MINUTES} * * * * /bin/bash $(pwd)/basic-poc.sh" >> temp_crontab
+if ! grep -Fxq "*/${CRON_INTERVAL_MINUTES} * * * * /bin/bash /home/ubuntu/repo/OCI-never-idle/basic-poc.sh" temp_crontab; then
+    echo "*/${CRON_INTERVAL_MINUTES} * * * * /bin/bash /home/ubuntu/repo/OCI-never-idle/basic-poc.sh" >> temp_crontab
     crontab temp_crontab
 fi
 rm temp_crontab
