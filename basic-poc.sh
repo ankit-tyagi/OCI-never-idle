@@ -1,63 +1,53 @@
 #!/bin/bash
 
-# Basic Proof of Concept (PoC) script to limit CPU and network usage
+# Check if cpulimit and tc are installed
+if ! command -v cpulimit &> /dev/null || ! command -v tc &> /dev/null; then
+    echo "Error: cpulimit and/or tc not found. Please install them before running this script."
+    exit 1
+fi
 
 # Variables
 CPU_PERCENT=25
-NET_SPEED_KBPS=200
-LOG_FILE="basic-poc.log"
 INTERFACE="enp0s3" # Replace with your network interface, e.g., wlan0, enp0s3, eth0, etc.
-RUNS_PER_DAY=6
-DURATION=3600 # Duration in seconds (1 hour)
-CRON_IDENTIFIER="# AUTO GENERATED CRON FOR basic-poc.sh"
+upNETWORK_SPEED=200kbps
+LOG_FILE="basic-poc.log"
+CRON_FILE="basic-poc-cron.txt"
+RUNS_PER_DAY=8
+RUN_DURATION_SECONDS=3600
 
-# Function to check if a command exists
-command_exists () {
-    type "$1" &> /dev/null ;
-}
+# Calculate the cpulimit value
+CPU_CORES=$(nproc)
+CPULIMIT_VALUE=$(awk "BEGIN {printf \"%.0f\", ${CPU_PERCENT}*${CPU_CORES}}")
 
-# Check if cpulimit and tc are installed
-if command_exists cpulimit && command_exists tc; then
-    echo "cpulimit and tc are installed, continuing with the script." | tee -a "$LOG_FILE"
-else
-    echo "Error: cpulimit and/or tc not found. Please install them before running this script." | tee -a "$LOG_FILE"
-    exit 1
+# Set up CPU limiting
+cpulimit -e "cpulimit" -l ${CPULIMIT_VALUE} &
+
+# Set up network limiting
+tc qdisc add dev ${INTERFACE} root handle 1: htb default 10
+tc class add dev ${INTERFACE} parent 1: classid 1:10 htb rate ${NETWORK_SPEED}
+tc filter add dev ${INTERFACE} protocol ip parent 1: prio 1 u32 match ip src 0.0.0.0/0 flowid 1:10
+
+# Set up logging
+while true; do
+    echo "[$(date)] Status: Running | CPU limit: ${CPULIMIT_VALUE}% | Network limit: ${NETWORK_SPEED}" >> ${LOG_FILE}
+    sleep 5
+done &
+
+# Set up cron job
+CRON_INTERVAL_MINUTES=$(( 1440 / RUNS_PER_DAY ))
+echo "*/${CRON_INTERVAL_MINUTES} * * * * /bin/bash $(pwd)/basic-poc.sh" > ${CRON_FILE}
+crontab -l > temp_crontab
+if ! grep -Fxq "*/${CRON_INTERVAL_MINUTES} * * * * /bin/bash $(pwd)/basic-poc.sh" temp_crontab; then
+    echo "*/${CRON_INTERVAL_MINUTES} * * * * /bin/bash $(pwd)/basic-poc.sh" >> temp_crontab
+    crontab temp_crontab
 fi
+rm temp_crontab
 
-# Update or create a new cron job
-if [ "$(id -u)" -ne 0 ]; then
-    echo "To manage the cron job, please run the script as root." | tee -a "$LOG_FILE"
-    exit 1
-else
-    CRON_SCHEDULE="*/$((24 * 60 / RUNS_PER_DAY)) * * * *"
-    CRON_COMMAND="bash $(realpath $0) --run"
-    (crontab -l 2>/dev/null | grep -v "$CRON_IDENTIFIER" ; echo "$CRON_SCHEDULE $CRON_COMMAND $CRON_IDENTIFIER") | crontab -
-    echo "Cron job updated to run $RUNS_PER_DAY times a day for $DURATION seconds each." | tee -a "$LOG_FILE"
-fi
+echo "Cron job updated to run ${RUNS_PER_DAY} times a day for ${RUN_DURATION_SECONDS} seconds each."
 
-# Check if the script was called with the --run argument
-if [ "$#" -eq 1 ] && [ "$1" == "--run" ]; then
-    # Limit CPU usage for the current shell
-    cpulimit -P $$ -l $CPU_PERCENT &>> "$LOG_FILE" &
-    CPULIMIT_PID=$!
-    echo "CPU usage for this shell limited to $CPU_PERCENT% (cpulimit PID: $CPULIMIT_PID)" | tee -a "$LOG_FILE"
+# Run for the specified duration and then stop limiting CPU and network
+sleep ${RUN_DURATION_SECONDS}
+killall cpulimit
+tc qdisc del dev ${INTERFACE} root
 
-    # Limit network bandwidth usage
-    LIMIT_BW=$NET_SPEED_KBPS
-
-    # Set up traffic control
-    tc qdisc add dev $INTERFACE root handle 1: htb default 10 &>> "$LOG_FILE"
-    tc class add dev $INTERFACE parent 1: classid 1:1 htb rate ${LIMIT_BW}Kbit ceil ${LIMIT_BW}Kbit &>> "$LOG_FILE"
-    tc class add dev $INTERFACE parent 1:1 classid 1:10 htb rate ${LIMIT_BW}Kbit ceil ${LIMIT_BW}Kbit &>> "$LOG_FILE"
-
-    echo "Network bandwidth limited to $LIMIT_BW Kbps on interface $INTERFACE" | tee -a "$LOG_FILE"
-
-    # Sleep for the duration
-    sleep $DURATION
-
-    # Revert changes
-    kill $CPULIMIT_PID &>> "$LOG_FILE"
-    tc qdisc del dev $INTERFACE root &>> "$LOG_FILE"
-
-    echo "CPU and network limitations removed." | tee -a "$LOG_FILE"
-fi
+echo "[$(date)] Status: Stopped" >> ${LOG_FILE}
