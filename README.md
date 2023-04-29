@@ -15,7 +15,7 @@ sudo apt-get install ethtool
 
 
 chmod +x basic-poc.sh
-./basic-poc.sh
+sudo ./basic-poc.sh
 ```
 
 # Script not working
